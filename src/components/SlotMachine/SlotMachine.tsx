@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import SlotReel from './SlotReel';
 import BetControls from './BetControls';
 import WalletConnect from './WalletConnect';
@@ -15,6 +15,11 @@ const SlotMachine: React.FC = () => {
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+
+  // Pre-load sounds
+  const spinSound = useRef(new Audio('/sounds/spin.mp3'));
+  const winSound = useRef(new Audio('/sounds/win.mp3'));
+  const loseSound = useRef(new Audio('/sounds/lose.mp3'));
 
   const spinReels = useCallback(() => {
     if (!isWalletConnected) {
@@ -33,23 +38,23 @@ const SlotMachine: React.FC = () => {
     setReelResults(newResults);
 
     // Play spin sound
-    const spinSound = new Audio('/sounds/spin.mp3');
-    spinSound.play();
+    spinSound.current.currentTime = 0;
+    spinSound.current.play().catch(console.error);
 
     setTimeout(() => {
       setIsSpinning(false);
       // Check for win condition
       if (newResults[0] === newResults[1] && newResults[1] === newResults[2]) {
-        const winSound = new Audio('/sounds/win.mp3');
-        winSound.play();
+        winSound.current.currentTime = 0;
+        winSound.current.play().catch(console.error);
         toast({
           title: 'Winner!',
           description: `You won ${Number(betAmount) * 3} ${selectedToken}!`,
           variant: 'default',
         });
       } else {
-        const loseSound = new Audio('/sounds/lose.mp3');
-        loseSound.play();
+        loseSound.current.currentTime = 0;
+        loseSound.current.play().catch(console.error);
       }
     }, 2500);
   }, [betAmount, isWalletConnected, reelResults, selectedToken]);
