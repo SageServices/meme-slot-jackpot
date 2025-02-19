@@ -2,7 +2,13 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Select } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 interface BetControlsProps {
   onSpin: () => void;
@@ -36,16 +42,17 @@ const BetControls: React.FC<BetControlsProps> = ({
           className="flex-1"
           placeholder="Bet Amount"
         />
-        <Select
-          value={selectedToken}
-          onValueChange={onTokenChange}
-          disabled={isSpinning}
-        >
-          {tokens.map((token) => (
-            <Select.Option key={token} value={token}>
-              {token}
-            </Select.Option>
-          ))}
+        <Select value={selectedToken} onValueChange={onTokenChange} disabled={isSpinning}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="Token" />
+          </SelectTrigger>
+          <SelectContent>
+            {tokens.map((token) => (
+              <SelectItem key={token} value={token}>
+                {token}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
       <Button
