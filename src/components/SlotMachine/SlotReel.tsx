@@ -46,7 +46,7 @@ const SlotReel: React.FC<SlotReelProps> = ({
   }, [spinning, finalSymbol, delay, onSpinComplete, symbols]);
 
   return (
-    <div className="relative w-24 h-24 overflow-hidden rounded-lg bg-gradient-to-b from-gray-800 to-black border border-slot-neon-purple/30 shadow-lg">
+    <div className="relative w-[70px] h-[70px] sm:w-24 sm:h-24 overflow-hidden rounded-lg bg-gradient-to-b from-gray-800 to-black border border-slot-neon-purple/30 shadow-lg">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slot-neon-purple/5 to-transparent pointer-events-none" />
       <div
         className={`transition-transform duration-100 ${
