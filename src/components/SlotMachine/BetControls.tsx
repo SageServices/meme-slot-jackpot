@@ -30,7 +30,7 @@ const BetControls: React.FC<BetControlsProps> = ({
   tokens,
 }) => {
   return (
-    <div className="flex flex-col gap-4 w-full max-w-xs">
+    <div className="flex flex-col gap-4 w-full max-w-xs mx-auto">
       <div className="flex gap-2">
         <Input
           type="number"
@@ -39,16 +39,16 @@ const BetControls: React.FC<BetControlsProps> = ({
           min="0.1"
           step="0.1"
           disabled={isSpinning}
-          className="flex-1"
+          className="flex-1 bg-gray-900 border-slot-neon-purple text-white placeholder-gray-400"
           placeholder="Bet Amount"
         />
         <Select value={selectedToken} onValueChange={onTokenChange} disabled={isSpinning}>
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-[100px] bg-gray-900 border-slot-neon-purple text-white">
             <SelectValue placeholder="Token" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 border-slot-neon-purple">
             {tokens.map((token) => (
-              <SelectItem key={token} value={token}>
+              <SelectItem key={token} value={token} className="text-white hover:bg-slot-neon-purple/20">
                 {token}
               </SelectItem>
             ))}
@@ -58,7 +58,11 @@ const BetControls: React.FC<BetControlsProps> = ({
       <Button
         onClick={onSpin}
         disabled={isSpinning}
-        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 text-white font-bold py-3"
+        className={`w-full py-6 text-lg font-bold transition-all duration-300 ${
+          isSpinning
+            ? 'bg-gray-700 cursor-not-allowed'
+            : 'bg-gradient-to-r from-slot-neon-purple to-slot-neon-green hover:from-slot-neon-purple/80 hover:to-slot-neon-green/80 animate-neon-pulse'
+        }`}
       >
         {isSpinning ? 'Spinning...' : 'SPIN!'}
       </Button>

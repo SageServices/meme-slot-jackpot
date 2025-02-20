@@ -21,9 +21,13 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         slot: {
-          background: "#1a1b23",
+          background: "#1A1F2C",
           reel: "#2a2b33",
           symbol: "#3a3b43",
+          neon: {
+            purple: "#9b87f5",
+            green: "#4CAF50",
+          },
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -60,13 +64,22 @@ export default {
           "100%": { transform: "translateY(-100%)" },
         },
         "slot-win": {
-          "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.1)" },
+          "0%, 100%": { transform: "scale(1)", filter: "brightness(1)" },
+          "50%": { transform: "scale(1.1)", filter: "brightness(1.2)" },
+        },
+        "neon-pulse": {
+          "0%, 100%": { 
+            filter: "drop-shadow(0 0 2px #9b87f5) drop-shadow(0 0 5px #9b87f5)",
+          },
+          "50%": { 
+            filter: "drop-shadow(0 0 5px #9b87f5) drop-shadow(0 0 10px #9b87f5)",
+          },
         },
       },
       animation: {
         "spin-slot": "spin-slot 0.5s ease-in-out",
         "slot-win": "slot-win 0.5s ease-in-out",
+        "neon-pulse": "neon-pulse 2s ease-in-out infinite",
       },
     },
   },

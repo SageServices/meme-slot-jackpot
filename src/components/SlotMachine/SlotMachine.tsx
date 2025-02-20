@@ -87,9 +87,9 @@ const SlotMachine: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slot-background p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slot-background bg-gradient-to-b from-slate-900 to-slate-800 p-8">
       <div className="relative w-full max-w-4xl mx-auto">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <WalletConnect
             onConnect={connectWallet}
             isConnected={isWalletConnected}
@@ -97,31 +97,41 @@ const SlotMachine: React.FC = () => {
           />
         </div>
         
-        <div className="flex flex-col items-center gap-8 backdrop-blur-xl bg-white/5 p-8 rounded-2xl shadow-2xl">
-          <h1 className="text-4xl font-bold text-white mb-8">Meme Slot Machine</h1>
+        {/* Main slot machine container with neon effect */}
+        <div className="flex flex-col items-center gap-8 backdrop-blur-xl bg-black/30 p-12 rounded-3xl shadow-2xl border border-slot-neon-purple/20 animate-neon-pulse">
+          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slot-neon-purple to-slot-neon-green mb-8 animate-neon-pulse">
+            Meme Slot Machine
+          </h1>
           
-          <div className="flex gap-4 mb-8">
-            {[0, 1, 2].map((index) => (
-              <SlotReel
-                key={index}
-                symbols={SYMBOLS}
-                spinning={isSpinning}
-                finalSymbol={reelResults[index]}
-                onSpinComplete={() => {}}
-                delay={index * 200}
-              />
-            ))}
-          </div>
+          {/* Slot machine frame */}
+          <div className="relative p-8 rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 shadow-xl border-t-4 border-slot-neon-purple">
+            {/* Slot display window */}
+            <div className="flex gap-4 mb-8 p-6 bg-black rounded-lg border border-gray-700">
+              {[0, 1, 2].map((index) => (
+                <SlotReel
+                  key={index}
+                  symbols={SYMBOLS}
+                  spinning={isSpinning}
+                  finalSymbol={reelResults[index]}
+                  onSpinComplete={() => {}}
+                  delay={index * 200}
+                />
+              ))}
+            </div>
 
-          <BetControls
-            onSpin={spinReels}
-            betAmount={betAmount}
-            onBetChange={setBetAmount}
-            isSpinning={isSpinning}
-            selectedToken={selectedToken}
-            onTokenChange={setSelectedToken}
-            tokens={TOKENS}
-          />
+            {/* Controls section */}
+            <div className="mt-8">
+              <BetControls
+                onSpin={spinReels}
+                betAmount={betAmount}
+                onBetChange={setBetAmount}
+                isSpinning={isSpinning}
+                selectedToken={selectedToken}
+                onTokenChange={setSelectedToken}
+                tokens={TOKENS}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
