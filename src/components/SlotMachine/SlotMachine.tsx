@@ -1,7 +1,9 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SlotReel from './SlotReel';
 import BetControls from './BetControls';
 import WalletConnect from './WalletConnect';
+import InstructionsDialog from './InstructionsDialog';
 import { toast } from '../ui/use-toast';
 
 const SYMBOLS = ['doge', 'shib', 'pepe', 'moon', 'rocket', 'diamond'];
@@ -161,6 +163,8 @@ const SlotMachine: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <InstructionsDialog />
     </div>
   );
 };
