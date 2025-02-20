@@ -1,9 +1,10 @@
 
 interface Window {
   solana?: {
-    connect(): Promise<{ publicKey: { toString(): string } }>;
+    connect(options?: { onlyIfTrusted: boolean }): Promise<{ publicKey: { toString(): string } }>;
     disconnect(): Promise<void>;
     isPhantom?: boolean;
+    request(params: { method: string; params?: any[] }): Promise<any>;
   }
 }
 

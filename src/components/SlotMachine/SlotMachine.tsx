@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SlotReel from './SlotReel';
 import BetControls from './BetControls';
 import WalletConnect from './WalletConnect';
@@ -20,6 +20,71 @@ const SlotMachine: React.FC = () => {
   const spinSound = useRef(new Audio('/sounds/spin.mp3'));
   const winSound = useRef(new Audio('/sounds/win.mp3'));
   const loseSound = useRef(new Audio('/sounds/lose.mp3'));
+
+  // Check if Phantom is installed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loadPhantom = async () => {
+        try {
+          if ('solana' in window) {
+            const phantom = window.solana;
+            if (phantom?.isPhantom) {
+              // Auto-connect if previously authorized
+              try {
+                const response = await phantom.connect({ onlyIfTrusted: true });
+                setWalletAddress(response.publicKey.toString());
+                setIsWalletConnected(true);
+              } catch (error) {
+                // User hasn't authorized the app yet
+                console.log("Wallet not connected:", error);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Phantom wallet check failed:", error);
+        }
+      };
+      loadPhantom();
+    }
+  }, []);
+
+  const connectWallet = useCallback(async () => {
+    try {
+      if (typeof window.solana !== 'undefined') {
+        if (!window.solana.isPhantom) {
+          window.open('https://phantom.app/', '_blank');
+          toast({
+            title: 'Phantom not installed',
+            description: 'Please install Phantom wallet from phantom.app',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const response = await window.solana.connect();
+        setWalletAddress(response.publicKey.toString());
+        setIsWalletConnected(true);
+        toast({
+          title: 'Wallet Connected',
+          description: 'Successfully connected to Phantom wallet',
+        });
+      } else {
+        window.open('https://phantom.app/', '_blank');
+        toast({
+          title: 'Phantom not found',
+          description: 'Please install Phantom wallet from phantom.app',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      toast({
+        title: 'Connection Failed',
+        description: 'Failed to connect to wallet. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, []);
 
   const spinReels = useCallback(() => {
     if (!isWalletConnected) {
@@ -58,33 +123,6 @@ const SlotMachine: React.FC = () => {
       }
     }, 2500);
   }, [betAmount, isWalletConnected, reelResults, selectedToken]);
-
-  const connectWallet = useCallback(async () => {
-    try {
-      if (typeof window.solana !== 'undefined') {
-        const response = await window.solana.connect();
-        setWalletAddress(response.publicKey.toString());
-        setIsWalletConnected(true);
-        toast({
-          title: 'Wallet Connected',
-          description: 'Successfully connected to Phantom wallet',
-        });
-      } else {
-        toast({
-          title: 'Phantom not found',
-          description: 'Please install Phantom wallet',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-      toast({
-        title: 'Connection Failed',
-        description: 'Failed to connect to wallet',
-        variant: 'destructive',
-      });
-    }
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slot-background bg-gradient-to-b from-slate-900 to-slate-800 p-8">
