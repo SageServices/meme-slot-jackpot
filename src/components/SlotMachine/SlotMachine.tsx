@@ -1,13 +1,14 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SlotReel from './SlotReel';
 import BetControls from './BetControls';
 import WalletConnect from './WalletConnect';
 import InstructionsDialog from './InstructionsDialog';
 import { toast } from '../ui/use-toast';
+import { getBalance, sendTransaction } from '../../utils/solanaUtils';
 
 const SYMBOLS = ['doge', 'shib', 'pepe', 'moon', 'rocket', 'diamond'];
-const TOKENS = ['SOL', 'BONK', 'SAMO'];
+const TOKENS = ['SOL'];
+const HOUSE_WALLET = 'YOUR_HOUSE_WALLET_ADDRESS'; // This should be replaced with the actual house wallet address
 
 const SlotMachine: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -16,6 +17,7 @@ const SlotMachine: React.FC = () => {
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+  const [balance, setBalance] = useState(0);
 
   const spinSound = useRef(new Audio('/sounds/spin.mp3'));
   const winSound = useRef(new Audio('/sounds/win.mp3'));
@@ -30,8 +32,11 @@ const SlotMachine: React.FC = () => {
             if (phantom?.isPhantom) {
               try {
                 const response = await phantom.connect({ onlyIfTrusted: true });
-                setWalletAddress(response.publicKey.toString());
+                const address = response.publicKey.toString();
+                setWalletAddress(address);
                 setIsWalletConnected(true);
+                const bal = await getBalance(address);
+                setBalance(bal);
               } catch (error) {
                 console.log("Wallet not connected:", error);
               }
@@ -59,11 +64,14 @@ const SlotMachine: React.FC = () => {
         }
 
         const response = await window.solana.connect();
-        setWalletAddress(response.publicKey.toString());
+        const address = response.publicKey.toString();
+        setWalletAddress(address);
         setIsWalletConnected(true);
+        const bal = await getBalance(address);
+        setBalance(bal);
         toast({
           title: 'Wallet Connected',
-          description: 'Successfully connected to Phantom wallet',
+          description: `Successfully connected with balance: ${bal.toFixed(4)} SOL`,
         });
       } else {
         window.open('https://phantom.app/', '_blank');
@@ -83,7 +91,26 @@ const SlotMachine: React.FC = () => {
     }
   }, []);
 
-  const spinReels = useCallback(() => {
+  const handlePayout = async (amount: number) => {
+    try {
+      const signature = await sendTransaction(HOUSE_WALLET, walletAddress, amount);
+      toast({
+        title: 'Payout Successful!',
+        description: `You won ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`,
+      });
+      const newBalance = await getBalance(walletAddress);
+      setBalance(newBalance);
+    } catch (error) {
+      console.error('Payout failed:', error);
+      toast({
+        title: 'Payout Failed',
+        description: 'Unable to process payout. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const spinReels = useCallback(async () => {
     if (!isWalletConnected) {
       toast({
         title: 'Connect Wallet',
@@ -93,31 +120,59 @@ const SlotMachine: React.FC = () => {
       return;
     }
 
-    setIsSpinning(true);
-    const newResults = reelResults.map(
-      () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
-    );
-    setReelResults(newResults);
+    const bet = parseFloat(betAmount);
+    if (bet > balance) {
+      toast({
+        title: 'Insufficient Balance',
+        description: 'You do not have enough SOL to place this bet',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    spinSound.current.currentTime = 0;
-    spinSound.current.play().catch(console.error);
+    try {
+      // Send bet amount to house wallet
+      await sendTransaction(walletAddress, HOUSE_WALLET, bet);
+      
+      setIsSpinning(true);
+      const newResults = SYMBOLS.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+      setReelResults(newResults);
 
-    setTimeout(() => {
+      spinSound.current.currentTime = 0;
+      spinSound.current.play().catch(console.error);
+
+      setTimeout(async () => {
+        setIsSpinning(false);
+        
+        // Check for win conditions
+        if (newResults[0] === newResults[1] && newResults[1] === newResults[2]) {
+          const winAmount = bet * 3;
+          winSound.current.currentTime = 0;
+          winSound.current.play().catch(console.error);
+          await handlePayout(winAmount);
+        } else {
+          loseSound.current.currentTime = 0;
+          loseSound.current.play().catch(console.error);
+          toast({
+            title: 'Better luck next time!',
+            description: 'Try again for a chance to win big!',
+          });
+        }
+        
+        // Update balance
+        const newBalance = await getBalance(walletAddress);
+        setBalance(newBalance);
+      }, 2500);
+    } catch (error) {
+      console.error('Error during spin:', error);
+      toast({
+        title: 'Transaction Failed',
+        description: 'Unable to process bet. Please try again.',
+        variant: 'destructive',
+      });
       setIsSpinning(false);
-      if (newResults[0] === newResults[1] && newResults[1] === newResults[2]) {
-        winSound.current.currentTime = 0;
-        winSound.current.play().catch(console.error);
-        toast({
-          title: 'Winner!',
-          description: `You won ${Number(betAmount) * 3} ${selectedToken}!`,
-          variant: 'default',
-        });
-      } else {
-        loseSound.current.currentTime = 0;
-        loseSound.current.play().catch(console.error);
-      }
-    }, 2500);
-  }, [betAmount, isWalletConnected, reelResults, selectedToken]);
+    }
+  }, [betAmount, balance, isWalletConnected, walletAddress]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slot-background bg-gradient-to-b from-slate-900 to-slate-800 p-4 sm:p-8">
@@ -127,6 +182,7 @@ const SlotMachine: React.FC = () => {
             onConnect={connectWallet}
             isConnected={isWalletConnected}
             address={walletAddress}
+            balance={balance}
           />
         </div>
         
@@ -182,4 +238,3 @@ const SlotMachine: React.FC = () => {
 };
 
 export default SlotMachine;
-
