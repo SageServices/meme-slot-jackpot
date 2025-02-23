@@ -26,7 +26,7 @@ export const sendTransaction = async (
       SystemProgram.transfer({
         fromPubkey: new PublicKey(fromPubkey),
         toPubkey: new PublicKey(toPubkey),
-        lamports: amount * LAMPORTS_PER_SOL,
+        lamports: Math.round(amount * LAMPORTS_PER_SOL),
       })
     );
 
@@ -34,8 +34,21 @@ export const sendTransaction = async (
       throw new Error('Phantom wallet not found');
     }
 
+    // Get the latest blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = new PublicKey(fromPubkey);
+
+    // Sign and send the transaction using Phantom wallet
     const { signature } = await window.solana.signAndSendTransaction(transaction);
-    await connection.confirmTransaction(signature);
+    
+    // Wait for transaction confirmation
+    const confirmation = await connection.confirmTransaction(signature);
+    
+    if (confirmation.value.err) {
+      throw new Error('Transaction failed');
+    }
+    
     return signature;
   } catch (error) {
     console.error('Error sending transaction:', error);
