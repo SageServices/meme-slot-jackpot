@@ -161,6 +161,18 @@ const SlotMachine: React.FC = () => {
               />
             </div>
           </div>
+
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 -translate-y-full">
+            <div className="px-6 py-2 bg-yellow-500 text-black font-bold rounded-full animate-bounce shadow-lg">
+              🎰 MEGA JACKPOT 🎰
+            </div>
+          </div>
+          
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 translate-y-full w-full max-w-sm">
+            <div className="text-center text-sm text-yellow-500 animate-pulse">
+              💎 Win up to 1000x your bet! 💎
+            </div>
+          </div>
         </div>
       </div>
       
@@ -170,3 +182,4 @@ const SlotMachine: React.FC = () => {
 };
 
 export default SlotMachine;
+
