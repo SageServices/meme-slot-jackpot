@@ -39,6 +39,25 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
     }
   }, [isConnected, balance]);
 
+  const handleDisconnect = async () => {
+    try {
+      if (window.solana && window.solana.disconnect) {
+        await window.solana.disconnect();
+        toast({
+          title: "Wallet Disconnected",
+          description: "Your wallet has been unlinked successfully",
+        });
+      }
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      toast({
+        title: "Disconnect Failed",
+        description: "Failed to unlink wallet. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <Button
@@ -58,7 +77,7 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
               : 'Loading balance...'}
           </div>
           <Button
-            onClick={onConnect}
+            onClick={handleDisconnect}
             variant="outline"
             size="sm"
             className="text-xs opacity-80 hover:opacity-100"
