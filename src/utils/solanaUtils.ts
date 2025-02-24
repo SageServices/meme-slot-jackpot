@@ -1,5 +1,4 @@
-
-import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Commitment } from '@solana/web3.js';
 
 // Devnet connection with commitment level set to 'confirmed'
 export const connection = new Connection('https://api.devnet.solana.com', {
@@ -10,17 +9,29 @@ export const connection = new Connection('https://api.devnet.solana.com', {
 // Function to get SOL balance
 export const getBalance = async (publicKey: string): Promise<number> => {
   try {
+    console.log('Attempting to get balance for address:', publicKey);
+    
     // Create PublicKey instance and validate it
     const pubKey = new PublicKey(publicKey);
     if (!PublicKey.isOnCurve(pubKey)) {
+      console.error('Invalid public key provided');
       throw new Error('Invalid public key');
     }
 
-    // Get balance with explicit commitment
+    // Get balance with different commitment levels to debug
+    const commitments: Commitment[] = ['processed', 'confirmed', 'finalized'];
+    for (const commitment of commitments) {
+      const balance = await connection.getBalance(pubKey, commitment);
+      console.log(`Balance with ${commitment} commitment:`, balance / LAMPORTS_PER_SOL, 'SOL');
+    }
+
+    // Use confirmed commitment for final balance
     const balance = await connection.getBalance(pubKey, 'confirmed');
-    console.log('Raw balance in lamports:', balance);
     const solBalance = balance / LAMPORTS_PER_SOL;
-    console.log('Converted balance in SOL:', solBalance);
+    
+    console.log('Final balance in lamports:', balance);
+    console.log('Final balance in SOL:', solBalance);
+    
     return solBalance;
   } catch (error) {
     console.error('Error getting balance:', error);

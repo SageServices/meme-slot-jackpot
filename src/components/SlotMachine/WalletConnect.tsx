@@ -18,11 +18,24 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
   balance,
 }) => {
   useEffect(() => {
-    if (isConnected && balance === undefined) {
-      toast({
-        title: "Balance Update",
-        description: "Refreshing wallet balance...",
-      });
+    if (isConnected) {
+      if (balance === undefined) {
+        toast({
+          title: "Loading Balance",
+          description: "Fetching your wallet balance...",
+        });
+      } else if (balance === 0) {
+        toast({
+          title: "No SOL Found",
+          description: "Make sure you have SOL in your wallet and you're connected to Devnet",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Balance Updated",
+          description: `Current balance: ${balance.toFixed(4)} SOL`,
+        });
+      }
     }
   }, [isConnected, balance]);
 
