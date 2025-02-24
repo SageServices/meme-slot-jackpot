@@ -8,7 +8,7 @@ import { getBalance, sendTransaction } from '../../utils/solanaUtils';
 
 const SYMBOLS = ['doge', 'shib', 'pepe', 'moon', 'rocket', 'diamond'];
 const TOKENS = ['SOL'];
-const HOUSE_WALLET = 'YOUR_HOUSE_WALLET_ADDRESS'; // This should be replaced with the actual house wallet address
+const HOUSE_WALLET = '4iLbQpA51ZJN5yFf5RoswabcvqWxsninf4GJGGh24o3J';
 
 const SlotMachine: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
