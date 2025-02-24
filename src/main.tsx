@@ -1,6 +1,16 @@
+// src/main.tsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { WalletProvider } from '@solana/wallet-adapter-react';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import App from './App';
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+// Use environment variables for sensitive data
+const SOLANA_RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
-createRoot(document.getElementById("root")!).render(<App />);
+const root = createRoot(document.getElementById('root')!);
+root.render(
+    <WalletProvider wallets={[new PhantomWalletAdapter()]}>
+        <App rpcUrl={SOLANA_RPC_URL} />
+    </WalletProvider>
+);
