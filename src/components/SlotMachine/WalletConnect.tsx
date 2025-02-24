@@ -51,11 +51,21 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
           : 'Connect Wallet'}
       </Button>
       {isConnected && (
-        <div className="text-sm text-white bg-black/50 px-3 py-1 rounded-md text-center">
-          {balance !== undefined
-            ? `Balance: ${balance.toFixed(4)} SOL`
-            : 'Loading balance...'}
-        </div>
+        <>
+          <div className="text-sm text-white bg-black/50 px-3 py-1 rounded-md text-center">
+            {balance !== undefined
+              ? `Balance: ${balance.toFixed(4)} SOL`
+              : 'Loading balance...'}
+          </div>
+          <Button
+            onClick={onConnect}
+            variant="outline"
+            size="sm"
+            className="text-xs opacity-80 hover:opacity-100"
+          >
+            Unlink Wallet
+          </Button>
+        </>
       )}
     </div>
   );
