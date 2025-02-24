@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Wallet } from 'lucide-react';
+import { toast } from '../ui/use-toast';
 
 interface WalletConnectProps {
   onConnect: () => void;
@@ -16,6 +17,15 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
   address,
   balance,
 }) => {
+  useEffect(() => {
+    if (isConnected && balance === undefined) {
+      toast({
+        title: "Balance Update",
+        description: "Refreshing wallet balance...",
+      });
+    }
+  }, [isConnected, balance]);
+
   return (
     <div className="flex flex-col gap-2">
       <Button
@@ -27,9 +37,11 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
           ? `${address?.slice(0, 6)}...${address?.slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {isConnected && balance !== undefined && (
+      {isConnected && (
         <div className="text-sm text-white bg-black/50 px-3 py-1 rounded-md text-center">
-          Balance: {balance.toFixed(4)} SOL
+          {balance !== undefined
+            ? `Balance: ${balance.toFixed(4)} SOL`
+            : 'Loading balance...'}
         </div>
       )}
     </div>
@@ -37,4 +49,3 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
 };
 
 export default WalletConnect;
-

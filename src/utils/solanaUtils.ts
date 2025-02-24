@@ -1,17 +1,30 @@
 
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-// Devnet connection
-export const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+// Devnet connection with commitment level set to 'confirmed'
+export const connection = new Connection('https://api.devnet.solana.com', {
+  commitment: 'confirmed',
+  wsEndpoint: 'wss://api.devnet.solana.com/',
+});
 
 // Function to get SOL balance
 export const getBalance = async (publicKey: string): Promise<number> => {
   try {
-    const balance = await connection.getBalance(new PublicKey(publicKey));
-    return balance / LAMPORTS_PER_SOL;
+    // Create PublicKey instance and validate it
+    const pubKey = new PublicKey(publicKey);
+    if (!PublicKey.isOnCurve(pubKey)) {
+      throw new Error('Invalid public key');
+    }
+
+    // Get balance with explicit commitment
+    const balance = await connection.getBalance(pubKey, 'confirmed');
+    console.log('Raw balance in lamports:', balance);
+    const solBalance = balance / LAMPORTS_PER_SOL;
+    console.log('Converted balance in SOL:', solBalance);
+    return solBalance;
   } catch (error) {
     console.error('Error getting balance:', error);
-    return 0;
+    throw error;
   }
 };
 
@@ -55,4 +68,3 @@ export const sendTransaction = async (
     throw error;
   }
 };
-
