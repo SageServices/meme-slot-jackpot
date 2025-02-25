@@ -1,6 +1,6 @@
+
 // src/App.tsx
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -43,7 +43,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       const lamports = Math.floor(betAmount * 1_000_000_000);
       const transaction = new Transaction();
 
-      // Build a simple instruction (match your smart contract’s spin function)
+      // Build a simple instruction (match your smart contract's spin function)
       const instruction = {
         keys: [{ pubkey: publicKey, isSigner: true, isWritable: true }],
         programId: PROGRAM_ID,
@@ -55,12 +55,12 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       await connection.confirmTransaction(signature, "confirmed");
 
       setResult(`Spin successful! Signature: ${signature}`);
-      Sonner.success("Spin completed successfully!", {
+      toast.success("Spin completed successfully!", {
         description: `Transaction: ${signature}`,
       });
     } catch (error) {
       setResult(`Error: ${error.message}`);
-      Sonner.error("Spin failed!", { description: error.message });
+      toast.error("Spin failed!", { description: error.message });
     }
   }
 
@@ -68,7 +68,6 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
         <BrowserRouter>
           <Routes>
             <Route
@@ -121,7 +120,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
                       </>
                     )}
                   </div>
-                  <Index /> {/* Preserve your existing Index page */}
+                  <Index />
                 </div>
               }
             />
