@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -59,14 +58,6 @@ export default {
         },
       },
       keyframes: {
-        "spin-slot": {
-          "0%": { transform: "translateY(0)" },
-          "100%": { transform: "translateY(-100%)" },
-        },
-        "slot-win": {
-          "0%, 100%": { transform: "scale(1)", filter: "brightness(1)" },
-          "50%": { transform: "scale(1.1)", filter: "brightness(1.2)" },
-        },
         "neon-pulse": {
           "0%, 100%": { 
             filter: "drop-shadow(0 0 2px #9b87f5) drop-shadow(0 0 5px #9b87f5)",
@@ -77,12 +68,9 @@ export default {
         },
       },
       animation: {
-        "spin-slot": "spin-slot 0.5s ease-in-out",
-        "slot-win": "slot-win 0.5s ease-in-out",
         "neon-pulse": "neon-pulse 2s ease-in-out infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

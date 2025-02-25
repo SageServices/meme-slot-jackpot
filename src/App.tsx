@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 const App: React.FC<AppProps> = ({ rpcUrl }) => {
   const { publicKey, sendTransaction, connect, disconnect, connecting } =
     useWallet();
-  const [betAmount, setBetAmount] = useState<number>(0.1); // In SOL
+  const [betAmount, setBetAmount] = useState<number>(0.1);
   const [result, setResult] = useState<string>("");
 
   // Use environment variables for sensitive data
@@ -101,52 +101,66 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
             <Route
               path="/"
               element={
-                <div>
-                  <div
-                    style={{
-                      textAlign: "center",
-                      margin: "20px",
-                      color: "#fff",
-                      backgroundColor: "#1a1a1a",
-                    }}
-                  >
-                    <h1 style={{ color: "#00ff00" }}>MEME Slot Machine</h1>
-                    {!publicKey ? (
-                      <button onClick={connect} disabled={connecting}>
-                        {connecting ? "Connecting..." : "Connect Wallet"}
-                      </button>
-                    ) : (
-                      <>
-                        <p>Connected as: {publicKey.toString()}</p>
-                        <label htmlFor="betAmount">Bet Amount (SOL):</label>
-                        <input
-                          id="betAmount"
-                          type="number"
-                          value={betAmount}
-                          onChange={(e) =>
-                            setBetAmount(parseFloat(e.target.value) || 0.1)
-                          }
-                          min="0.1"
-                          max="1"
-                          step="0.1"
-                          disabled={connecting}
-                          style={{
-                            padding: "5px",
-                            margin: "5px",
-                            borderRadius: "5px",
-                            border: "1px solid #ccc",
-                          }}
-                        />
+                <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900">
+                  <div className="text-center p-8">
+                    <h1 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-slot-neon-purple to-slot-neon-green animate-pulse">
+                      MEME Slot Machine
+                    </h1>
+                    <div className="max-w-md mx-auto bg-black/50 backdrop-blur-sm p-6 rounded-xl border border-slot-neon-purple/30 shadow-xl">
+                      {!publicKey ? (
                         <button
-                          onClick={spin}
-                          disabled={connecting || !publicKey}
+                          onClick={connect}
+                          disabled={connecting}
+                          className="bg-gradient-to-r from-slot-neon-purple to-slot-neon-green text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-all duration-200 animate-pulse"
                         >
-                          {connecting ? "Connecting..." : "Spin!"}
+                          {connecting ? "Connecting..." : "Connect Wallet"}
                         </button>
-                        <button onClick={disconnect}>Disconnect</button>
-                        <p>{result}</p>
-                      </>
-                    )}
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-white/80 break-all">
+                            Connected as: {publicKey.toString()}
+                          </p>
+                          <div className="space-y-2">
+                            <label htmlFor="betAmount" className="text-white">
+                              Bet Amount (SOL):
+                            </label>
+                            <input
+                              id="betAmount"
+                              type="number"
+                              value={betAmount}
+                              onChange={(e) =>
+                                setBetAmount(parseFloat(e.target.value) || 0.1)
+                              }
+                              min="0.1"
+                              max="1"
+                              step="0.1"
+                              disabled={connecting}
+                              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-slot-neon-purple/50 text-white focus:outline-none focus:border-slot-neon-purple"
+                            />
+                          </div>
+                          <div className="flex gap-4 justify-center">
+                            <button
+                              onClick={spin}
+                              disabled={connecting || !publicKey}
+                              className="bg-gradient-to-r from-slot-neon-purple to-slot-neon-green text-white px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-all duration-200"
+                            >
+                              {connecting ? "Connecting..." : "SPIN! 🎰"}
+                            </button>
+                            <button
+                              onClick={disconnect}
+                              className="bg-red-500/80 text-white px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-all duration-200"
+                            >
+                              Disconnect
+                            </button>
+                          </div>
+                          {result && (
+                            <p className="text-white/80 mt-4 p-4 bg-black/30 rounded-lg">
+                              {result}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Index />
                 </div>
