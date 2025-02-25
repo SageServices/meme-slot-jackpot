@@ -7,8 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import React, { useState } from "react";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { toast } from "@/components/ui/sonner";
 
 interface AppProps {
   rpcUrl: string;
@@ -23,13 +24,13 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
   const [result, setResult] = useState<string>("");
 
   // Use environment variables for sensitive data
-  const PROGRAM_ID = new PublicKey(import.meta.env.VITE_PROGRAM_ID);
+  const PROGRAM_ID = new PublicKey(import.meta.env.VITE_PROGRAM_ID || "9298F6CtRHU4HFGcAaiAY3BoiDPw1XXh6yLMHf2AefER");
 
   const connection = new Connection(rpcUrl, "confirmed");
 
   async function spin(): Promise<void> {
     if (!publicKey) {
-      alert("Please connect your Phantom wallet first!");
+      toast.error("Please connect your Phantom wallet first!");
       return;
     }
 
@@ -41,24 +42,51 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
     setResult("Spinning...");
     try {
       const lamports = Math.floor(betAmount * 1_000_000_000);
+      
+      // Create PDA for game state
+      const [gameStatePda] = await PublicKey.findProgramAddress(
+        [Buffer.from("game_state"), publicKey.toBuffer()],
+        PROGRAM_ID
+      );
+
       const transaction = new Transaction();
 
-      // Build a simple instruction (match your smart contract's spin function)
+      // Create the instruction
       const instruction = {
-        keys: [{ pubkey: publicKey, isSigner: true, isWritable: true }],
+        keys: [
+          { pubkey: publicKey, isSigner: true, isWritable: true },
+          { pubkey: gameStatePda, isSigner: false, isWritable: true },
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        ],
         programId: PROGRAM_ID,
-        data: Buffer.from([0, ...lamports.toString().padStart(8, "0")]), // Simplified data
+        data: Buffer.from([
+          0, // Discriminator for 'spin' instruction
+          ...new Uint8Array(new BigUint64Array([BigInt(lamports)]).buffer) // Bet amount as u64
+        ]),
       };
 
-      transaction.add({ ...instruction });
+      transaction.add(instruction);
+      
       const signature = await sendTransaction(transaction, connection);
       await connection.confirmTransaction(signature, "confirmed");
 
-      setResult(`Spin successful! Signature: ${signature}`);
-      toast.success("Spin completed successfully!", {
-        description: `Transaction: ${signature}`,
-      });
+      // Fetch game state to show result
+      const accountInfo = await connection.getAccountInfo(gameStatePda);
+      const lastSpinResult = accountInfo?.data[40] || 0; // Assuming last_spin_result is at offset 40
+
+      setResult(`Spin result: ${lastSpinResult}. Signature: ${signature}`);
+      
+      if (lastSpinResult > 7) {
+        toast.success("You won! Double payout received!", {
+          description: `Transaction: ${signature}`,
+        });
+      } else {
+        toast.error("Better luck next time!", {
+          description: `Transaction: ${signature}`,
+        });
+      }
     } catch (error) {
+      console.error("Spin error:", error);
       setResult(`Error: ${error.message}`);
       toast.error("Spin failed!", { description: error.message });
     }
