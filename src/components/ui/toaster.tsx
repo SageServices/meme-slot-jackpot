@@ -1,4 +1,4 @@
-// src/components/ui/toaster.tsx
+
 import * as React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -7,9 +7,6 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
-
-// Export Toaster as an alias for Toast to match App.tsx's import
-export const Toaster = ToastPrimitives.Root;
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
@@ -115,6 +112,8 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName;
 type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>;
+
+const Toaster = ToastPrimitives.Root;
 
 export {
   type ToastProps,
