@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -22,7 +21,6 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
   const [betAmount, setBetAmount] = useState<number>(0.1);
   const [result, setResult] = useState<string>("");
 
-  // Use environment variables for sensitive data
   const PROGRAM_ID = new PublicKey(import.meta.env.VITE_PROGRAM_ID || "9298F6CtRHU4HFGcAaiAY3BoiDPw1XXh6yLMHf2AefER");
 
   const connection = new Connection(rpcUrl, "confirmed");
@@ -134,7 +132,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
                               max="1"
                               step="0.1"
                               disabled={connecting}
-                              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-slot-neon-purple/50 text-white focus:outline-none focus:border-slot-neon-purple"
+                              className="w-full px-4 py-2 rounded-lg bg-black/50 border border-slot-neon-purple/50 text-white focus:outline-none focus:border-slot-neon-purple focus:ring-1 focus:ring-slot-neon-purple appearance-none"
                             />
                           </div>
                           <div className="flex gap-4 justify-center">
