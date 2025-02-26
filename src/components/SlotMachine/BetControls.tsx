@@ -36,7 +36,7 @@ const BetControls: React.FC<BetControlsProps> = ({
           type="number"
           value={betAmount}
           onChange={(e) => onBetChange(e.target.value)}
-          min="0.1"
+          min="0.001"
           step="0.1"
           disabled={isSpinning}
           className="flex-1 bg-gray-900 border-slot-neon-purple text-white placeholder-gray-400 text-sm sm:text-base h-9 sm:h-10"
