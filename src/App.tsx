@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Connection, PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "@/components/ui/sonner";
@@ -21,10 +21,36 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
     useWallet();
   const [betAmount, setBetAmount] = useState<number>(0.1);
   const [result, setResult] = useState<string>("");
+  const lastSpinTime = useRef<number>(0);
 
+  // Program ID is public and safe to include in client code
   const PROGRAM_ID = new PublicKey("9298F6CtRHU4HFGcAaiAY3BoiDPw1XXh6yLMHf2AefER");
 
-  const connection = new Connection(rpcUrl, "confirmed");
+  // Create a connection with retries and proper error handling
+  const connection = new Connection(rpcUrl, {
+    commitment: "confirmed",
+    wsEndpoint: rpcUrl.replace('https', 'wss'),
+    confirmTransactionInitialTimeout: 60000
+  });
+
+  const validateBetAmount = (amount: number): boolean => {
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid bet amount");
+      return false;
+    }
+    return true;
+  };
+
+  const checkRateLimit = (): boolean => {
+    const now = Date.now();
+    const timeSinceLastSpin = now - lastSpinTime.current;
+    if (timeSinceLastSpin < 2000) { // 2 second cooldown
+      toast.error("Please wait before spinning again");
+      return false;
+    }
+    lastSpinTime.current = now;
+    return true;
+  };
 
   async function spin(): Promise<void> {
     if (!publicKey) {
@@ -37,6 +63,10 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       return;
     }
 
+    if (!validateBetAmount(betAmount) || !checkRateLimit()) {
+      return;
+    }
+
     console.log("Starting spin with bet amount:", betAmount);
     setResult("Spinning...");
     
@@ -44,11 +74,18 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       const lamports = Math.floor(betAmount * 1_000_000_000); // Convert SOL to lamports
       console.log("Bet amount in lamports:", lamports);
 
-      // Create PDA for game state
-      const [gameStatePda] = await PublicKey.findProgramAddress(
-        [Buffer.from("game_state"), publicKey.toBuffer()],
-        PROGRAM_ID
-      );
+      // Create PDA for game state with error handling
+      let gameStatePda: PublicKey;
+      try {
+        [gameStatePda] = await PublicKey.findProgramAddress(
+          [Buffer.from("game_state"), publicKey.toBuffer()],
+          PROGRAM_ID
+        );
+      } catch (error) {
+        console.error("Error creating PDA:", error);
+        toast.error("Failed to initialize game state");
+        return;
+      }
       console.log("Game state PDA:", gameStatePda.toString());
 
       const transaction = new Transaction();
@@ -62,8 +99,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
         ],
         programId: PROGRAM_ID,
         data: Buffer.from([
-          // "spin" instruction discriminator (first 8 bytes)
-          57, 12, 108, 106, 109, 99, 56, 182,
+          57, 12, 108, 106, 109, 99, 56, 182, // "spin" instruction discriminator
           ...new Uint8Array(new BigInt64Array([BigInt(lamports)]).buffer) // bet_amount as u64
         ])
       };
@@ -77,15 +113,27 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       await connection.confirmTransaction(signature, "confirmed");
       console.log("Transaction confirmed");
 
-      // Fetch game state to show result
-      const accountInfo = await connection.getAccountInfo(gameStatePda);
-      const lastSpinResult = accountInfo?.data[40] || 0; // lastSpinResult is at offset 40 (after 32 bytes pubkey + 8 bytes balance)
+      // Fetch game state to show result with retry logic
+      let accountInfo = null;
+      for (let i = 0; i < 3; i++) {
+        accountInfo = await connection.getAccountInfo(gameStatePda);
+        if (accountInfo) break;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      if (!accountInfo) {
+        throw new Error("Failed to fetch game state");
+      }
+
+      const lastSpinResult = accountInfo.data[40] || 0;
       console.log("Last spin result:", lastSpinResult);
 
       setResult(`Spin result: ${lastSpinResult}. Signature: ${signature}`);
       
+      // Calculate winnings based on bet amount and result
       if (lastSpinResult > 7) {
-        toast.success("You won! Double payout received!", {
+        const winAmount = betAmount * 2; // Double the bet amount for wins
+        toast.success(`You won ${winAmount} SOL!`, {
           description: `Transaction: ${signature}`,
         });
       } else {
