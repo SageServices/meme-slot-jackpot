@@ -1,27 +1,30 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import SlotReel from './SlotReel';
+
+import React, { useEffect } from 'react';
+import GameBoard from './GameBoard';
 import BetControls from './BetControls';
 import WalletConnect from './WalletConnect';
 import InstructionsDialog from './InstructionsDialog';
-import { toast } from '../ui/use-toast';
-import { getBalance, sendTransaction } from '../../utils/solanaUtils';
-
-const SYMBOLS = ['doge', 'shib', 'pepe', 'moon', 'rocket', 'diamond'];
-const TOKENS = ['SOL'];
-const HOUSE_WALLET = '4iLbQpA51ZJN5yFf5RoswabcvqWxsninf4GJGGh24o3J';
+import { useSlotMachine } from '../../hooks/useSlotMachine';
+import { getBalance } from '../../utils/solanaUtils';
+import { TOKENS } from '../../hooks/useSlotMachine';
 
 const SlotMachine: React.FC = () => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [reelResults, setReelResults] = useState(['doge', 'shib', 'pepe']);
-  const [betAmount, setBetAmount] = useState('0.1');
-  const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
-  const [balance, setBalance] = useState(0);
-
-  const spinSound = useRef(new Audio('/sounds/spin.mp3'));
-  const winSound = useRef(new Audio('/sounds/win.mp3'));
-  const loseSound = useRef(new Audio('/sounds/lose.mp3'));
+  const {
+    isSpinning,
+    reelResults,
+    betAmount,
+    selectedToken,
+    isWalletConnected,
+    walletAddress,
+    balance,
+    setBetAmount,
+    setSelectedToken,
+    spinReels,
+    connectWallet,
+    setIsWalletConnected,
+    setWalletAddress,
+    setBalance,
+  } = useSlotMachine();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -48,131 +51,7 @@ const SlotMachine: React.FC = () => {
       };
       loadPhantom();
     }
-  }, []);
-
-  const connectWallet = useCallback(async () => {
-    try {
-      if (typeof window.solana !== 'undefined') {
-        if (!window.solana.isPhantom) {
-          window.open('https://phantom.app/', '_blank');
-          toast({
-            title: 'Phantom not installed',
-            description: 'Please install Phantom wallet from phantom.app',
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        const response = await window.solana.connect();
-        const address = response.publicKey.toString();
-        setWalletAddress(address);
-        setIsWalletConnected(true);
-        const bal = await getBalance(address);
-        setBalance(bal);
-        toast({
-          title: 'Wallet Connected',
-          description: `Successfully connected with balance: ${bal.toFixed(4)} SOL`,
-        });
-      } else {
-        window.open('https://phantom.app/', '_blank');
-        toast({
-          title: 'Phantom not found',
-          description: 'Please install Phantom wallet from phantom.app',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-      toast({
-        title: 'Connection Failed',
-        description: 'Failed to connect to wallet. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  }, []);
-
-  const handlePayout = async (amount: number) => {
-    try {
-      const signature = await sendTransaction(HOUSE_WALLET, walletAddress, amount);
-      toast({
-        title: 'Payout Successful!',
-        description: `You won ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`,
-      });
-      const newBalance = await getBalance(walletAddress);
-      setBalance(newBalance);
-    } catch (error) {
-      console.error('Payout failed:', error);
-      toast({
-        title: 'Payout Failed',
-        description: 'Unable to process payout. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const spinReels = useCallback(async () => {
-    if (!isWalletConnected) {
-      toast({
-        title: 'Connect Wallet',
-        description: 'Please connect your wallet to play',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const bet = parseFloat(betAmount);
-    if (bet > balance) {
-      toast({
-        title: 'Insufficient Balance',
-        description: 'You do not have enough SOL to place this bet',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      // Send bet amount to house wallet
-      await sendTransaction(walletAddress, HOUSE_WALLET, bet);
-      
-      setIsSpinning(true);
-      const newResults = SYMBOLS.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
-      setReelResults(newResults);
-
-      spinSound.current.currentTime = 0;
-      spinSound.current.play().catch(console.error);
-
-      setTimeout(async () => {
-        setIsSpinning(false);
-        
-        // Check for win conditions
-        if (newResults[0] === newResults[1] && newResults[1] === newResults[2]) {
-          const winAmount = bet * 3;
-          winSound.current.currentTime = 0;
-          winSound.current.play().catch(console.error);
-          await handlePayout(winAmount);
-        } else {
-          loseSound.current.currentTime = 0;
-          loseSound.current.play().catch(console.error);
-          toast({
-            title: 'Better luck next time!',
-            description: 'Try again for a chance to win big!',
-          });
-        }
-        
-        // Update balance
-        const newBalance = await getBalance(walletAddress);
-        setBalance(newBalance);
-      }, 2500);
-    } catch (error) {
-      console.error('Error during spin:', error);
-      toast({
-        title: 'Transaction Failed',
-        description: 'Unable to process bet. Please try again.',
-        variant: 'destructive',
-      });
-      setIsSpinning(false);
-    }
-  }, [betAmount, balance, isWalletConnected, walletAddress]);
+  }, [setWalletAddress, setIsWalletConnected, setBalance]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slot-background bg-gradient-to-b from-slate-900 to-slate-800 p-4 sm:p-8">
@@ -192,18 +71,10 @@ const SlotMachine: React.FC = () => {
           </h1>
           
           <div className="relative p-4 sm:p-8 rounded-xl sm:rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 shadow-xl border-t-4 border-slot-neon-purple w-full">
-            <div className="flex justify-center gap-2 sm:gap-4 mb-4 sm:mb-8 p-3 sm:p-6 bg-black rounded-lg border border-gray-700">
-              {[0, 1, 2].map((index) => (
-                <SlotReel
-                  key={index}
-                  symbols={SYMBOLS}
-                  spinning={isSpinning}
-                  finalSymbol={reelResults[index]}
-                  onSpinComplete={() => {}}
-                  delay={index * 200}
-                />
-              ))}
-            </div>
+            <GameBoard
+              isSpinning={isSpinning}
+              reelResults={reelResults}
+            />
 
             <div className="mt-4 sm:mt-8">
               <BetControls
