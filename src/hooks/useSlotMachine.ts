@@ -19,10 +19,12 @@ export const useSlotMachine = () => {
   const spinSound = useRef(new Audio('/sounds/spin.mp3'));
   const winSound = useRef(new Audio('/sounds/win.mp3'));
   const loseSound = useRef(new Audio('/sounds/lose.mp3'));
+  const lastSpinTime = useRef(0);
 
   const handlePayout = async (amount: number) => {
     try {
       const signature = await sendTransaction(HOUSE_WALLET, walletAddress, amount);
+      console.log('Payout transaction signature:', signature);
       toast({
         title: 'Payout Successful!',
         description: `You won ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`,
@@ -49,7 +51,28 @@ export const useSlotMachine = () => {
       return;
     }
 
+    // Rate limiting
+    const now = Date.now();
+    if (now - lastSpinTime.current < 3000) {
+      toast({
+        title: 'Please Wait',
+        description: 'Please wait a moment before spinning again',
+        variant: 'destructive',
+      });
+      return;
+    }
+    lastSpinTime.current = now;
+
     const bet = parseFloat(betAmount);
+    if (isNaN(bet) || bet <= 0) {
+      toast({
+        title: 'Invalid Bet',
+        description: 'Please enter a valid bet amount',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (bet > balance) {
       toast({
         title: 'Insufficient Balance',
@@ -60,26 +83,31 @@ export const useSlotMachine = () => {
     }
 
     try {
+      setIsSpinning(true);
+      console.log('Sending bet transaction...');
       await sendTransaction(walletAddress, HOUSE_WALLET, bet);
       
-      setIsSpinning(true);
+      spinSound.current.currentTime = 0;
+      await spinSound.current.play().catch(console.error);
+
       const newResults = SYMBOLS.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
       setReelResults(newResults);
+      console.log('New reel results:', newResults);
 
-      spinSound.current.currentTime = 0;
-      spinSound.current.play().catch(console.error);
-
+      // Wait for animation to complete
       setTimeout(async () => {
         setIsSpinning(false);
         
         if (newResults[0] === newResults[1] && newResults[1] === newResults[2]) {
           const winAmount = bet * 3;
+          console.log('Winner! Processing payout of', winAmount, 'SOL');
           winSound.current.currentTime = 0;
-          winSound.current.play().catch(console.error);
+          await winSound.current.play().catch(console.error);
           await handlePayout(winAmount);
         } else {
+          console.log('No win this time');
           loseSound.current.currentTime = 0;
-          loseSound.current.play().catch(console.error);
+          await loseSound.current.play().catch(console.error);
           toast({
             title: 'Better luck next time!',
             description: 'Try again for a chance to win big!',
