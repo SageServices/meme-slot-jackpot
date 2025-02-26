@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,7 +22,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
   const [betAmount, setBetAmount] = useState<number>(0.1);
   const [result, setResult] = useState<string>("");
 
-  const PROGRAM_ID = new PublicKey(import.meta.env.VITE_PROGRAM_ID || "9298F6CtRHU4HFGcAaiAY3BoiDPw1XXh6yLMHf2AefER");
+  const PROGRAM_ID = new PublicKey("9298F6CtRHU4HFGcAaiAY3BoiDPw1XXh6yLMHf2AefER");
 
   const connection = new Connection(rpcUrl, "confirmed");
 
@@ -36,19 +37,23 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
       return;
     }
 
+    console.log("Starting spin with bet amount:", betAmount);
     setResult("Spinning...");
+    
     try {
-      const lamports = Math.floor(betAmount * 1_000_000_000);
-      
+      const lamports = Math.floor(betAmount * 1_000_000_000); // Convert SOL to lamports
+      console.log("Bet amount in lamports:", lamports);
+
       // Create PDA for game state
       const [gameStatePda] = await PublicKey.findProgramAddress(
         [Buffer.from("game_state"), publicKey.toBuffer()],
         PROGRAM_ID
       );
+      console.log("Game state PDA:", gameStatePda.toString());
 
       const transaction = new Transaction();
 
-      // Create the instruction
+      // Create instruction matching Anchor program
       const instruction = {
         keys: [
           { pubkey: publicKey, isSigner: true, isWritable: true },
@@ -57,19 +62,25 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
         ],
         programId: PROGRAM_ID,
         data: Buffer.from([
-          0, // Discriminator for 'spin' instruction
-          ...new Uint8Array(new BigUint64Array([BigInt(lamports)]).buffer) // Bet amount as u64
-        ]),
+          // "spin" instruction discriminator (first 8 bytes)
+          57, 12, 108, 106, 109, 99, 56, 182,
+          ...new Uint8Array(new BigInt64Array([BigInt(lamports)]).buffer) // bet_amount as u64
+        ])
       };
 
       transaction.add(instruction);
+      console.log("Created transaction");
       
       const signature = await sendTransaction(transaction, connection);
+      console.log("Transaction sent, signature:", signature);
+      
       await connection.confirmTransaction(signature, "confirmed");
+      console.log("Transaction confirmed");
 
       // Fetch game state to show result
       const accountInfo = await connection.getAccountInfo(gameStatePda);
-      const lastSpinResult = accountInfo?.data[40] || 0; // Assuming last_spin_result is at offset 40
+      const lastSpinResult = accountInfo?.data[40] || 0; // lastSpinResult is at offset 40 (after 32 bytes pubkey + 8 bytes balance)
+      console.log("Last spin result:", lastSpinResult);
 
       setResult(`Spin result: ${lastSpinResult}. Signature: ${signature}`);
       
