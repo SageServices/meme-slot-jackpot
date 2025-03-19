@@ -21,6 +21,13 @@ export const useSlotMachine = () => {
   const loseSound = useRef(new Audio('/sounds/lose.mp3'));
   const lastSpinTime = useRef(0);
 
+  // Preload sounds
+  useRef(() => {
+    spinSound.current.load();
+    winSound.current.load();
+    loseSound.current.load();
+  });
+
   const handlePayout = async (amount: number) => {
     try {
       const signature = await sendTransaction(HOUSE_WALLET, walletAddress, amount);
@@ -87,9 +94,11 @@ export const useSlotMachine = () => {
       console.log('Sending bet transaction...');
       await sendTransaction(walletAddress, HOUSE_WALLET, bet);
       
+      // Play spin sound
       spinSound.current.currentTime = 0;
-      await spinSound.current.play().catch(console.error);
+      await spinSound.current.play().catch(err => console.log('Sound play error:', err));
 
+      // Generate random results
       const newResults = SYMBOLS.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
       setReelResults(newResults);
       console.log('New reel results:', newResults);
@@ -102,12 +111,12 @@ export const useSlotMachine = () => {
           const winAmount = bet * 3;
           console.log('Winner! Processing payout of', winAmount, 'SOL');
           winSound.current.currentTime = 0;
-          await winSound.current.play().catch(console.error);
+          await winSound.current.play().catch(err => console.log('Sound play error:', err));
           await handlePayout(winAmount);
         } else {
           console.log('No win this time');
           loseSound.current.currentTime = 0;
-          await loseSound.current.play().catch(console.error);
+          await loseSound.current.play().catch(err => console.log('Sound play error:', err));
           toast({
             title: 'Better luck next time!',
             description: 'Try again for a chance to win big!',
@@ -141,16 +150,25 @@ export const useSlotMachine = () => {
           return;
         }
 
-        const response = await window.solana.connect();
-        const address = response.publicKey.toString();
-        setWalletAddress(address);
-        setIsWalletConnected(true);
-        const bal = await getBalance(address);
-        setBalance(bal);
-        toast({
-          title: 'Wallet Connected',
-          description: `Successfully connected with balance: ${bal.toFixed(4)} SOL`,
-        });
+        try {
+          const response = await window.solana.connect();
+          const address = response.publicKey.toString();
+          setWalletAddress(address);
+          setIsWalletConnected(true);
+          const bal = await getBalance(address);
+          setBalance(bal);
+          toast({
+            title: 'Wallet Connected',
+            description: `Successfully connected with balance: ${bal.toFixed(4)} SOL`,
+          });
+        } catch (connectionError) {
+          console.error('Error connecting to wallet:', connectionError);
+          toast({
+            title: 'Connection Failed',
+            description: 'Failed to connect to wallet. Please try again.',
+            variant: 'destructive',
+          });
+        }
       } else {
         window.open('https://phantom.app/', '_blank');
         toast({
@@ -160,10 +178,10 @@ export const useSlotMachine = () => {
         });
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
+      console.error('Error checking wallet:', error);
       toast({
         title: 'Connection Failed',
-        description: 'Failed to connect to wallet. Please try again.',
+        description: 'Failed to check wallet status. Please try again.',
         variant: 'destructive',
       });
     }

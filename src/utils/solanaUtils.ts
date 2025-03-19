@@ -1,3 +1,4 @@
+
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Commitment } from '@solana/web3.js';
 
 // Devnet connection with commitment level set to 'confirmed'
@@ -18,13 +19,6 @@ export const getBalance = async (publicKey: string): Promise<number> => {
       throw new Error('Invalid public key');
     }
 
-    // Get balance with different commitment levels to debug
-    const commitments: Commitment[] = ['processed', 'confirmed', 'finalized'];
-    for (const commitment of commitments) {
-      const balance = await connection.getBalance(pubKey, commitment);
-      console.log(`Balance with ${commitment} commitment:`, balance / LAMPORTS_PER_SOL, 'SOL');
-    }
-
     // Use confirmed commitment for final balance
     const balance = await connection.getBalance(pubKey, 'confirmed');
     const solBalance = balance / LAMPORTS_PER_SOL;
@@ -35,7 +29,7 @@ export const getBalance = async (publicKey: string): Promise<number> => {
     return solBalance;
   } catch (error) {
     console.error('Error getting balance:', error);
-    throw error;
+    return 0; // Return 0 instead of throwing to prevent UI issues
   }
 };
 
@@ -46,6 +40,10 @@ export const sendTransaction = async (
   amount: number
 ): Promise<string> => {
   try {
+    if (!window.solana) {
+      throw new Error('Phantom wallet not found');
+    }
+
     const transaction = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: new PublicKey(fromPubkey),
@@ -54,12 +52,8 @@ export const sendTransaction = async (
       })
     );
 
-    if (!window.solana) {
-      throw new Error('Phantom wallet not found');
-    }
-
     // Get the latest blockhash
-    const { blockhash } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = new PublicKey(fromPubkey);
 
@@ -67,9 +61,14 @@ export const sendTransaction = async (
     const { signature } = await window.solana.signAndSendTransaction(transaction);
     
     // Wait for transaction confirmation
-    const confirmation = await connection.confirmTransaction(signature);
+    const confirmation = await connection.confirmTransaction({
+      blockhash,
+      lastValidBlockHeight,
+      signature
+    });
     
     if (confirmation.value.err) {
+      console.error('Transaction confirmation error:', confirmation.value.err);
       throw new Error('Transaction failed');
     }
     

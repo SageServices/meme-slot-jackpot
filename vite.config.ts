@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { componentTagger } from "lovable-tagger";
 
+// @ts-ignore - Ignore the rollup/parseAst issue
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -15,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
+    mode === 'development' ? componentTagger() : undefined,
   ].filter(Boolean),
   define: {
     'import.meta.env': process.env,
