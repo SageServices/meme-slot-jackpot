@@ -1,10 +1,15 @@
 
-import type { Config } from "tailwindcss";
+import { type Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
-  prefix: "",
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
   theme: {
     container: {
       center: true,
@@ -20,15 +25,6 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        slot: {
-          background: "#1A1F2C",
-          reel: "#2a2b33",
-          symbol: "#3a3b43",
-          neon: {
-            purple: "#9b87f5",
-            green: "#4CAF50",
-          },
-        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -57,19 +53,61 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        slot: {
+          background: "#1A1F2C",
+          symbol: "rgba(0, 0, 0, 0.6)",
+        },
+        slot: {
+          background: "#1A1F2C",
+          symbol: "rgba(0, 0, 0, 0.6)",
+          "neon-purple": "#8B5CF6",
+          "neon-green": "#10B981",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", ...fontFamily.sans],
       },
       keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "spin-slot": {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(-500px)" },
+        },
+        "slot-win": {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)" },
+        },
         "neon-pulse": {
-          "0%, 100%": { 
-            filter: "drop-shadow(0 0 2px #9b87f5) drop-shadow(0 0 5px #9b87f5)",
-          },
-          "50%": { 
-            filter: "drop-shadow(0 0 5px #9b87f5) drop-shadow(0 0 10px #9b87f5)",
-          },
+          "0%": { boxShadow: "0 0 5px 0 rgba(139, 92, 246, 0.5)" },
+          "50%": { boxShadow: "0 0 20px 5px rgba(139, 92, 246, 0.8)" },
+          "100%": { boxShadow: "0 0 5px 0 rgba(139, 92, 246, 0.5)" },
+        },
+        "float": {
+          "0%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+          "100%": { transform: "translateY(0)" },
         },
       },
       animation: {
-        "neon-pulse": "neon-pulse 2s ease-in-out infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "spin-slot": "spin-slot 0.5s linear infinite",
+        "slot-win": "slot-win 0.5s ease-in-out 3",
+        "neon-pulse": "neon-pulse 2s infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
