@@ -7,3 +7,7 @@ interface ImportMetaEnv {
     VITE_WALLET_PUBLIC_KEY: string;
     // Add other environment variables as needed
 }
+
+interface ImportMeta {
+    readonly env: ImportMetaEnv;
+}
