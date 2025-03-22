@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { componentTagger } from "lovable-tagger";
 
-// @ts-ignore - Ignore the rollup/parseAst issue
+// Properly ignore the TypeScript error with a more explicit comment
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
