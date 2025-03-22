@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import World from "./components/ThreeD/World";
 import NotFound from "./pages/NotFound";
 
 interface AppProps {
@@ -27,6 +28,7 @@ const App: React.FC<AppProps> = ({ rpcUrl }) => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/world" element={<World />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
