@@ -2,9 +2,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { componentTagger } from "lovable-tagger";
 
-// Properly ignore the TypeScript error with a more explicit comment
+// Fixed TypeScript configuration for vite.config.ts
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -16,7 +15,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' ? componentTagger() : undefined,
+    // @ts-ignore - componentTagger may not be available or have type issues
+    mode === 'development' ? require("lovable-tagger").componentTagger() : undefined,
   ].filter(Boolean),
   define: {
     'import.meta.env': process.env,

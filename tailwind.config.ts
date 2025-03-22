@@ -56,12 +56,19 @@ export default {
         slot: {
           background: "#1A1F2C",
           symbol: "rgba(0, 0, 0, 0.6)",
-        },
-        slot: {
-          background: "#1A1F2C",
-          symbol: "rgba(0, 0, 0, 0.6)",
-          "neon-purple": "#8B5CF6",
+          "neon-purple": "#9b87f5",
           "neon-green": "#10B981",
+        },
+        fantasy: {
+          "primary": "#9b87f5",
+          "secondary": "#7E69AB",
+          "tertiary": "#6E59A5",
+          "dark": "#1A1F2C",
+          "light": "#D6BCFA",
+          "stone": "#8E9196",
+          "earth": "#3a6e32",
+          "wood": "#8A898C",
+          "metal": "#C8C8C9",
         },
       },
       borderRadius: {
@@ -100,6 +107,11 @@ export default {
           "50%": { transform: "translateY(-5px)" },
           "100%": { transform: "translateY(0)" },
         },
+        "magical-glow": {
+          "0%": { filter: "drop-shadow(0 0 2px #9b87f5)" },
+          "50%": { filter: "drop-shadow(0 0 10px #9b87f5)" },
+          "100%": { filter: "drop-shadow(0 0 2px #9b87f5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -108,6 +120,7 @@ export default {
         "slot-win": "slot-win 0.5s ease-in-out 3",
         "neon-pulse": "neon-pulse 2s infinite",
         "float": "float 3s ease-in-out infinite",
+        "magical-glow": "magical-glow 2s infinite",
       },
     },
   },

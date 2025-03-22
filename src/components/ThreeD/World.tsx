@@ -1,110 +1,217 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Sky, OrbitControls, Environment, PointerLockControls, Text, useTexture } from '@react-three/drei';
+import { Sky, OrbitControls, Environment, PointerLockControls, Text, useTexture, useGLTF, Plane, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 
-// Casino floor component
-const CasinoFloor = () => {
+// Fantasy terrain component
+const FantasyTerrain = () => {
   const texture = useTexture('/textures/casino-carpet.jpg');
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(20, 20);
   
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-      <planeGeometry args={[100, 100]} />
-      <meshStandardMaterial 
-        map={texture} 
-        metalness={0.1}
-        roughness={0.8}
-      />
-    </mesh>
+    <group>
+      {/* Main terrain */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
+        <planeGeometry args={[100, 100, 32, 32]} />
+        <meshStandardMaterial 
+          map={texture} 
+          metalness={0.1}
+          roughness={0.8}
+          color="#3a6e32"
+          displacementScale={2}
+        />
+      </mesh>
+      
+      {/* Fantasy stone paths */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.48, 10]} receiveShadow>
+        <planeGeometry args={[8, 20]} />
+        <meshStandardMaterial 
+          color="#8E9196" 
+          roughness={0.9}
+          metalness={0.1}
+        />
+      </mesh>
+    </group>
   );
 };
 
-// Casino building component
-const CasinoBuilding = () => {
+// Fantasy building component
+const FantasyBuilding = () => {
   const wallTexture = useTexture('/textures/wall.jpg');
   wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
   wallTexture.repeat.set(5, 2);
   
   return (
     <group>
-      {/* Casino main structure */}
+      {/* Main building structure - Medieval Castle style */}
       <mesh position={[0, 10, 0]} castShadow receiveShadow>
         <boxGeometry args={[40, 20, 40]} />
         <meshStandardMaterial 
           map={wallTexture}
           metalness={0.2}
           roughness={0.7}
-          color="#220033" 
-          transparent
-          opacity={0.9}
+          color="#8A898C" 
         />
       </mesh>
       
-      {/* Entrance */}
+      {/* Castle turrets */}
+      {[[-20, 10, -20], [20, 10, -20], [-20, 10, 20], [20, 10, 20]].map((position, i) => (
+        <group key={i} position={position}>
+          <mesh castShadow receiveShadow position={[0, 5, 0]}>
+            <cylinderGeometry args={[5, 5, 30, 16]} />
+            <meshStandardMaterial map={wallTexture} color="#6E59A5" />
+          </mesh>
+          <mesh castShadow receiveShadow position={[0, 22, 0]}>
+            <coneGeometry args={[6, 8, 16]} />
+            <meshStandardMaterial color="#403E43" />
+          </mesh>
+        </group>
+      ))}
+      
+      {/* Fantasy entrance */}
       <mesh position={[0, 5, 20.1]} castShadow>
         <boxGeometry args={[10, 10, 0.5]} />
-        <meshStandardMaterial color="#000000" />
+        <meshStandardMaterial color="#221F26" />
       </mesh>
       
-      {/* Casino sign */}
+      {/* Arch over entrance */}
+      <mesh position={[0, 11, 20.1]} castShadow>
+        <cylinderGeometry args={[5, 5, 2, 16, 1, true, 0, Math.PI]} rotation={[Math.PI/2, 0, 0]} />
+        <meshStandardMaterial color="#7E69AB" />
+      </mesh>
+      
+      {/* Flags on turrets */}
+      {[[-20, 26, -20], [20, 26, -20], [-20, 26, 20], [20, 26, 20]].map((position, i) => (
+        <group key={i} position={position}>
+          <mesh castShadow>
+            <boxGeometry args={[0.5, 6, 0.5]} />
+            <meshStandardMaterial color="#222222" />
+          </mesh>
+          <mesh position={[1.5, -1, 0]} castShadow>
+            <planeGeometry args={[3, 2]} />
+            <meshStandardMaterial color={i % 2 === 0 ? "#9b87f5" : "#6E59A5"} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      ))}
+      
+      {/* Fantasy guild sign */}
       <Text
         position={[0, 21, 0]}
         rotation={[0, Math.PI / 4, 0]}
         fontSize={3}
-        color="#ff00ff"
+        color="#D6BCFA"
         font="/fonts/Inter-Bold.woff"
         maxWidth={40}
         lineHeight={1}
         letterSpacing={0.02}
         textAlign="center"
       >
-        MEME Casino Metaverse
+        MEME Guild Hall
       </Text>
     </group>
   );
 };
 
-// Slot machine component
-const SlotMachine = ({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) => {
+// Magical object - replaces slot machine
+const MagicalRelic = ({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   
-  useFrame(() => {
-    if (meshRef.current && hovered) {
+  useFrame((state) => {
+    if (meshRef.current) {
       meshRef.current.rotation.y += 0.01;
+      // Floating animation
+      if (hovered) {
+        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.2;
+      }
     }
   });
   
   return (
-    <mesh
-      position={position}
-      rotation={rotation}
-      ref={meshRef}
-      castShadow
-      onClick={onClick}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <boxGeometry args={[2, 4, 1.5]} />
-      <meshStandardMaterial color={hovered ? "#8B5CF6" : "#6d28d9"} />
-      
-      {/* Slot machine screen */}
-      <mesh position={[0, 0.5, 0.76]}>
-        <planeGeometry args={[1.5, 1]} />
-        <meshBasicMaterial color="#10B981" />
+    <group position={position} rotation={rotation}>
+      {/* Magical relic pedestal */}
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[1, 1.5, 1, 8]} />
+        <meshStandardMaterial color="#8E9196" />
       </mesh>
       
-      {/* Slot machine lever */}
-      <mesh position={[1.1, 0, 0]} rotation={[0, 0, hovered ? -0.5 : 0]}>
-        <boxGeometry args={[0.2, 2, 0.2]} />
-        <meshStandardMaterial color="red" />
+      {/* Magical relic */}
+      <mesh
+        position={[0, 1.5, 0]}
+        ref={meshRef}
+        castShadow
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial 
+          color={hovered ? "#9b87f5" : "#7E69AB"} 
+          emissive={hovered ? "#9b87f5" : "#6E59A5"}
+          emissiveIntensity={hovered ? 0.5 : 0.2}
+          metalness={0.8}
+          roughness={0.2}
+        />
+        
+        {/* Magical particles */}
+        {hovered && Array.from({ length: 8 }).map((_, i) => (
+          <mesh key={i} position={[
+            Math.sin(i/8 * Math.PI * 2) * 1.5,
+            Math.cos(i/8 * Math.PI * 2) * 1.5,
+            0
+          ]}>
+            <sphereGeometry args={[0.1, 8, 8]} />
+            <meshStandardMaterial 
+              color="#D6BCFA" 
+              emissive="#D6BCFA"
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+        ))}
       </mesh>
-    </mesh>
+    </group>
+  );
+};
+
+// Floating crystals
+const FloatingCrystals = () => {
+  const crystals = useRef<THREE.Group>(null);
+  
+  useFrame(({ clock }) => {
+    if (crystals.current) {
+      crystals.current.rotation.y = clock.getElapsedTime() * 0.1;
+      crystals.current.children.forEach((child, i) => {
+        // @ts-ignore - position is available on Object3D
+        child.position.y += Math.sin(clock.getElapsedTime() * 1 + i) * 0.01;
+      });
+    }
+  });
+  
+  return (
+    <group ref={crystals}>
+      {Array.from({ length: 15 }).map((_, i) => {
+        const radius = 30;
+        const angle = (i / 15) * Math.PI * 2;
+        const x = Math.sin(angle) * radius;
+        const z = Math.cos(angle) * radius;
+        return (
+          <mesh key={i} position={[x, 10 + Math.random() * 10, z]} castShadow>
+            <tetrahedronGeometry args={[1 + Math.random(), 0]} />
+            <meshStandardMaterial 
+              color="#9b87f5"
+              emissive="#6E59A5"
+              emissiveIntensity={0.5}
+              metalness={0.8}
+              roughness={0.2}
+            />
+          </mesh>
+        );
+      })}
+    </group>
   );
 };
 
@@ -124,10 +231,10 @@ const PlayerControls = () => {
 // Main World component
 const World: React.FC = () => {
   const navigate = useNavigate();
-  const [slotMachineActive, setSlotMachineActive] = useState(false);
+  const [magicActive, setMagicActive] = useState(false);
   
-  const openSlotMachine = () => {
-    setSlotMachineActive(true);
+  const activateMagic = () => {
+    setMagicActive(true);
     setTimeout(() => {
       navigate('/');
     }, 1000);
@@ -136,28 +243,32 @@ const World: React.FC = () => {
   return (
     <div className="relative w-full h-screen">
       <Canvas shadows camera={{ fov: 75, near: 0.1, far: 1000 }}>
+        {/* Fantasy sky and environment */}
+        <Stars radius={100} depth={50} count={5000} factor={4} fade speed={1} />
+        <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0.1} azimuth={0.25} />
+        <Environment preset="night" />
+        <fog attach="fog" args={['#1A1F2C', 30, 95]} />
+        
+        {/* Scene lighting */}
         <ambientLight intensity={0.3} />
         <directionalLight 
-          position={[10, 10, 5]} 
-          intensity={1} 
+          position={[10, 20, 5]} 
+          intensity={0.8} 
           castShadow 
           shadow-mapSize-width={2048} 
           shadow-mapSize-height={2048} 
         />
-        <pointLight position={[0, 10, 0]} intensity={0.5} color="#ff00ff" />
+        <pointLight position={[0, 15, 0]} intensity={0.5} color="#9b87f5" distance={50} />
         
-        {/* Environment */}
-        <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25} />
-        <Environment preset="night" />
+        {/* Fantasy world elements */}
+        <FantasyTerrain />
+        <FantasyBuilding />
+        <FloatingCrystals />
         
-        {/* Casino elements */}
-        <CasinoFloor />
-        <CasinoBuilding />
-        
-        {/* Slot machines */}
-        <SlotMachine position={[-5, 2, 10]} rotation={[0, 0.5, 0]} onClick={openSlotMachine} />
-        <SlotMachine position={[0, 2, 10]} rotation={[0, 0, 0]} onClick={openSlotMachine} />
-        <SlotMachine position={[5, 2, 10]} rotation={[0, -0.5, 0]} onClick={openSlotMachine} />
+        {/* Magical relics (replacing slot machines) */}
+        <MagicalRelic position={[-10, 2, 10]} rotation={[0, 0.5, 0]} onClick={activateMagic} />
+        <MagicalRelic position={[0, 2, 10]} rotation={[0, 0, 0]} onClick={activateMagic} />
+        <MagicalRelic position={[10, 2, 10]} rotation={[0, -0.5, 0]} onClick={activateMagic} />
         
         {/* Controls */}
         <OrbitControls 
@@ -177,13 +288,13 @@ const World: React.FC = () => {
           className="bg-black/50 backdrop-blur-sm text-white"
           onClick={() => navigate('/')}
         >
-          Exit 3D World
+          Exit Magical Realm
         </Button>
       </div>
       
       {/* Instructions */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/50 backdrop-blur-sm text-white p-2 rounded-lg">
-        Use mouse to look around. Click on a slot machine to play.
+        Use mouse to look around. Click on a magical relic to activate its power.
       </div>
     </div>
   );
