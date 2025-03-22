@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// Fixed TypeScript configuration for vite.config.ts
+// Simplified configuration that doesn't attempt to modify tsconfig.node.json
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -15,9 +15,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // @ts-ignore - componentTagger may not be available or have type issues
-    mode === 'development' ? require("lovable-tagger").componentTagger() : undefined,
-  ].filter(Boolean),
+    // Remove the component tagger that might be causing issues
+  ],
   define: {
     'import.meta.env': process.env,
     global: 'globalThis',
@@ -29,6 +28,6 @@ export default defineConfig(({ mode }) => ({
     }
   },
   optimizeDeps: {
-    include: ['@solana/web3.js', '@radix-ui/react-*', 'sonner']
+    include: ['@solana/web3.js', '@radix-ui/react-*', 'sonner', 'three']
   }
 }));
